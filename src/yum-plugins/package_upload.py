@@ -17,24 +17,7 @@ sys.path.append('/usr/share/rhsm')
 
 from yum.plugins import PluginYumExit, TYPE_CORE, TYPE_INTERACTIVE
 
-try:
-  from subscription_manager import action_client
-except ImportError:
-  from subscription_manager import certmgr
-
-try:
-  from subscription_manager.identity import ConsumerIdentity
-except ImportError:
-  from subscription_manager.certlib import ConsumerIdentity
-
-from rhsm import connection
-
-try:
-    from subscription_manager.injectioninit import init_dep_injection
-    init_dep_injection()
-except ImportError:
-    pass
-
+from katello.util import upload_package_profile
 CACHE_FILE = '/var/lib/rhsm/packages/packages.json'
 
 requires_api_version = '2.3'
@@ -45,21 +28,6 @@ def remove_cache():
         os.remove(CACHE_FILE)
     except OSError:
         pass
-
-def upload_package_profile():
-    uep = connection.UEPConnection(cert_file=ConsumerIdentity.certpath(),
-                                   key_file=ConsumerIdentity.keypath())
-    get_manager().profilelib._do_update()
-
-def get_manager():
-    if 'subscription_manager.action_client' in sys.modules:
-        mgr = action_client.ActionClient()
-    else:
-        # for compatability with subscription-manager > =1.13
-        uep = connection.UEPConnection(cert_file=ConsumerIdentity.certpath(),
-                                        key_file=ConsumerIdentity.keypath())
-        mgr = certmgr.CertManager(uep=uep)
-    return mgr
 
 def posttrans_hook(conduit):
     if not conduit.confBool("main", "supress_debug"):
