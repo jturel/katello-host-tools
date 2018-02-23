@@ -23,8 +23,7 @@ class UploadReposCommand(dnf.cli.Command):
     @staticmethod
     def set_argparser(parser):
         parser.add_argument("-f", "--forceupload",
-                            help="""Force enabled repository upload even if
-                                it does not seem out of date.""",
+                            help="Force enabled repository upload even if it does not seem out of date.",
                             action='store_true')
 
 
@@ -44,17 +43,14 @@ class EnabledReposUpload(dnf.Plugin):
                    and conf.getboolean('main', 'enabled'))
 
         if enabled:
-            if (conf.has_option('main', 'supress_debug')
-               and not conf.getboolean('main', 'supress_debug')):
+            if (conf.has_option('main', 'supress_debug') and not conf.getboolean('main', 'supress_debug')):
                 logger.info("Uploading Enabled Repositories Report")
             try:
                 report = EnabledReport('/etc/yum.repos.d/redhat.repo')
                 upload_enabled_repos_report(report)
             except:
-                if (conf.has_option('main', 'supress_errors')
-                   and not conf.getboolean('main', 'supress_errors')):
-                    logger.error("""Unable to upload
-                     Enabled Repositories Report""")
+                if (conf.has_option('main', 'supress_errors') and not conf.getboolean('main', 'supress_errors')):
+                    logger.error("Unable to upload Enabled Repositories Report")
 
 
 class EnabledReport(object):
@@ -70,41 +66,40 @@ class EnabledReport(object):
     """
 
     @staticmethod
-    def find_enabled(dnf_base, repofn):
+    def find_enabled(dnf_base, repofile):
         """
         Get enabled repos part of the report.
         :param dnf_base: dnf lib.
         :type dnf_base: dnf.Base
-        :param repofn: The .repo file basename used to filter the report.
-        :type repofn: str
+        :param repofile: The .repo file basename used to filter the report.
+        :type repofile: str
         :return: The repo list content
         :rtype: dict
         """
         enabled = []
-        for r in dnf_base.repos.iter_enabled():
-            if not r.repofile:
+        for repo in dnf_base.repos.iter_enabled():
+            if not repo.repofile:
                 continue
-            fn = os.path.basename(r.repofile)
-            if fn != repofn:
+            if os.path.basename(repo.repofile) != repofile:
                 continue
-            item = dict(repositoryid=r.id, baseurl=r.baseurl)
+            item = {"repositoryid": repo.id, "baseurl": repo.baseurl}
             enabled.append(item)
-        return dict(repos=enabled)
+        return {"repos": enabled}
 
     @staticmethod
-    def generate(repofn):
+    def generate(repofile):
         """
         Generate the report content.
-        :param repofn: The .repo file basename used to filter the report.
-        :type repofn: str
+        :param repofile: The .repo file basename used to filter the report.
+        :type repofile: str
         :return: The report content
         :rtype: dict
         """
-        db = dnf.Base()
+        base = dnf.Base()
         try:
-            return dict(enabled_repos=EnabledReport.find_enabled(db, repofn))
+            return {"enabled_repos": EnabledReport.find_enabled(base, repofile)}
         finally:
-            db.close()
+            base.close()
 
     def __init__(self, path):
         """

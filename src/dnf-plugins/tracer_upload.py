@@ -49,12 +49,9 @@ def query_apps(plugin):
     query = Query()
     if plugin:
         packages = []
-        iset = set([package.name for package in
-                    plugin.base.transaction.install_set])
-        rset = set([package.name for package in
-                    plugin.base.transaction.remove_set])
-
-        installed = set([package.name for package in plugin.base.sack.query().installed()])
+        iset = set(package.name for package in plugin.base.transaction.install_set)
+        rset = set(package.name for package in plugin.base.transaction.remove_set)
+        installed = set(package.name for package in plugin.base.sack.query().installed())
 
         # When running via dnf we need to pass tracer a list of packages and
         # their last modified time so it has no need to access the rpmdb (which

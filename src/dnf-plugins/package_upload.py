@@ -33,8 +33,7 @@ class PackageUploadCommand(dnf.cli.Command):
     @staticmethod
     def set_argparser(parser):
         parser.add_argument("-f", "--forceupload",
-                            help="""Force package upload even if
-                            it does not seem out of date.""",
+                            help="Force package upload even if it does not seem out of date.",
                             action='store_true')
 
 

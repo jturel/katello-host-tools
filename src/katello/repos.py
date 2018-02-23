@@ -5,14 +5,14 @@ sys.path.append('/usr/lib/yum-plugins')
 sys.path.append('/usr/share/rhsm')
 
 try:
-  from subscription_manager import action_client
+    from subscription_manager import action_client
 except ImportError:
-  from subscription_manager import certmgr
+    from subscription_manager import certmgr
 
 try:
-  from subscription_manager.identity import ConsumerIdentity
+    from subscription_manager.identity import ConsumerIdentity
 except ImportError:
-  from subscription_manager.certlib import ConsumerIdentity
+    from subscription_manager.certlib import ConsumerIdentity
 
 try:
     from subscription_manager.injectioninit import init_dep_injection
@@ -107,5 +107,5 @@ class UEP(UEPConnection):
         try:
             self.conn.request_put(method, report)
         except (RemoteServerException, GoneException):
-            e = sys.exc_info()[1] # backward and forward compatible way to get the exception
-            error_message(str(e))
+            error = sys.exc_info()[1] # backward and forward compatible way to get the exception
+            error_message(str(error))
