@@ -1,13 +1,11 @@
-from katello.repos import lookup_consumer_id
-from katello.rhsm_compat import ConsumerIdentity, UEPConnection
+from katello.rhsm import lookup_consumer_id, get_uep
+
 
 def upload_tracer_profile(queryfunc, plugin):
-    key = ConsumerIdentity.keypath()
-    cert = ConsumerIdentity.certpath()
-    uep = UEPConnection(key_file=key, cert_file=cert)
+    uep = get_uep()
 
     method = '/consumers/%s/tracer' % uep.sanitize(lookup_consumer_id())
-    data = {"tracer": get_apps(queryfunc, plugin)}
+    data = {"traces": get_apps(queryfunc, plugin)}
     uep.conn.request_put(method, data)
 
 def get_apps(queryfunc, plugin):

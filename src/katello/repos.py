@@ -1,27 +1,10 @@
+import errno
 import os
 import sys
 
-sys.path.append('/usr/lib/yum-plugins')
-sys.path.append('/usr/share/rhsm')
+from katello.rhsm import get_uep, lookup_consumer_id
 
-try:
-    from subscription_manager import action_client
-except ImportError:
-    from subscription_manager import certmgr
-
-try:
-    from subscription_manager.identity import ConsumerIdentity
-except ImportError:
-    from subscription_manager.certlib import ConsumerIdentity
-
-try:
-    from subscription_manager.injectioninit import init_dep_injection
-    init_dep_injection()
-except ImportError:
-    pass
-
-from rhsm import connection
-from rhsm.connection import GoneException, RemoteServerException, UEPConnection
+from rhsm.connection import GoneException, RemoteServerException
 
 try:
     import json
@@ -31,17 +14,23 @@ except ImportError:
 def error_message(msg):
     sys.stderr.write(msg + "\n")
 
-
-def lookup_consumer_id():
+def report_enabled_repos(consumer_id, report):
+    """
+    Report enabled repositories to the UEP.
+    :param consumer_id: The consumer ID.
+    :type consumer_id: str
+    :param report: The report to send.
+    :type report: dict
+    """
+    uep = get_uep()
+    method = '/systems/%s/enabled_repos' % uep.sanitize(consumer_id)
     try:
-        certificate = ConsumerIdentity.read()
-        return certificate.getConsumerId()
-    except IOError:
-        return None
-
+        uep.conn.request_put(method, report)
+    except (RemoteServerException, GoneException):
+        error = sys.exc_info()[1] # backward and forward compatible way to get the exception
+        error_message(str(error))
 
 def upload_enabled_repos_report(report):
-    uep = UEP()
     content = report.content
     consumer_id = lookup_consumer_id()
     if consumer_id is None:
@@ -49,7 +38,7 @@ def upload_enabled_repos_report(report):
     else:
         cache = EnabledRepoCache(consumer_id, content)
         if not cache.is_valid():
-            uep.report_enabled(consumer_id, content)
+            report_enabled_repos(consumer_id, content)
             cache.save()
 
 
@@ -68,44 +57,34 @@ class EnabledRepoCache:
             pass
 
     def is_valid(self):
-        if not os.path.isfile(self.CACHE_FILE):
-            return False
-        file = open(self.CACHE_FILE)
+        cache_file = None
         try:
-            return self.data() == json.loads(file.read())
-        except ValueError:
-            return False
+            cache_file = open(self.CACHE_FILE, 'r')
+            try:
+                return self.data() == json.loads(cache_file.read())
+            except ValueError:
+                return False
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                return False
+        finally:
+            if cache_file is not None:
+                cache_file.close()
 
     def data(self):
         return {self.consumer_id: self.content}
 
     def save(self):
-        file = open(self.CACHE_FILE, 'w')
-        file.write(json.dumps(self.data()))
-        file.close()
+        cache_dir = os.path.dirname(self.CACHE_FILE)
+        if not os.path.isdir(cache_dir):
+            os.makedirs(cache_dir)
 
-
-class UEP(UEPConnection):
-    """
-    Represents the UEP.
-    """
-
-    def __init__(self):
-        key = ConsumerIdentity.keypath()
-        cert = ConsumerIdentity.certpath()
-        UEPConnection.__init__(self, key_file=key, cert_file=cert)
-
-    def report_enabled(self, consumer_id, report):
-        """
-        Report enabled repositories to the UEP.
-        :param consumer_id: The consumer ID.
-        :type consumer_id: str
-        :param report: The report to send.
-        :type report: dict
-        """
-        method = '/systems/%s/enabled_repos' % self.sanitize(consumer_id)
+        cache_file = None
         try:
-            self.conn.request_put(method, report)
-        except (RemoteServerException, GoneException):
-            error = sys.exc_info()[1] # backward and forward compatible way to get the exception
-            error_message(str(error))
+            cache_file = open(self.CACHE_FILE, 'w')
+            cache_file.write(json.dumps(self.data()))
+        finally:
+            if not cache_file == None:
+                cache_file.close()
+
+

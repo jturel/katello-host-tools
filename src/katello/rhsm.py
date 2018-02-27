@@ -19,15 +19,25 @@ try:
 except ImportError:
     pass
 
-from rhsm import connection
+from rhsm.connection import UEPConnection
 
+def lookup_consumer_id():
+    try:
+        certificate = ConsumerIdentity.read()
+        return certificate.getConsumerId()
+    except IOError:
+        return None
+
+def get_uep():
+    key = ConsumerIdentity.keypath()
+    cert = ConsumerIdentity.certpath()
+    uep = UEPConnection(key_file=key, cert_file=cert)
+    return uep
 
 def get_manager():
     if 'subscription_manager.action_client' in sys.modules:
         mgr = action_client.ActionClient()
     else:
         # for compatability with subscription-manager > =1.13
-        uep = connection.UEPConnection(cert_file=ConsumerIdentity.certpath(),
-                                       key_file=ConsumerIdentity.keypath())
-        mgr = certmgr.CertManager(uep=uep)
+        mgr = certmgr.CertManager(uep=get_uep())
     return mgr

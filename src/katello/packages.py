@@ -1,7 +1,6 @@
 import os
-import sys
 
-from katello.rhsm_compat import get_manager
+from katello.rhsm import get_manager
 
 
 def upload_package_profile():

@@ -77,6 +77,7 @@ class EnabledReport(object):
         :rtype: dict
         """
         enabled = []
+        dnf_base.read_all_repos()
         for repo in dnf_base.repos.iter_enabled():
             if not repo.repofile:
                 continue
