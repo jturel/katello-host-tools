@@ -82,7 +82,7 @@ def init_plugin():
                 update_settings()
             # DONE
             break
-        except Exception, e:
+        except Exception as e:
             log.warn(str(e))
             sleep(60)
 
@@ -125,7 +125,7 @@ def certificate_changed(path):
                 plugin.detach()
             # DONE
             break
-        except Exception, e:
+        except Exception as e:
             log.warn(str(e))
             sleep(60)
 
@@ -187,11 +187,11 @@ def validate_registration():
         uep = UEP()
         consumer = uep.getConsumer(consumer_id)
         registered = (consumer is not None)
-    except RemoteServerException, e:
+    except RemoteServerException as e:
         if e.code != httplib.NOT_FOUND:
             log.warn(str(e))
             raise
-    except Exception, e:
+    except Exception as e:
         log.exception(str(e))
         raise
 
