@@ -1,11 +1,14 @@
+from __future__ import absolute_import
+
+
 from logging import getLogger
 
 from katello.agent.pulp.report import ContentReport
 
 try:
-    from libdnf import Package, PackageGroup, Pattern
+    from .libdnf import Package, PackageGroup, Pattern
 except ImportError:
-    from libyum import Package, PackageGroup, Pattern
+    from .libyum import Package, PackageGroup, Pattern
 
 
 log = getLogger(__name__)

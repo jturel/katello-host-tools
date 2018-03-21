@@ -1,1 +1,3 @@
-from dispatcher import Dispatcher
+from __future__ import absolute_import
+
+from .dispatcher import Dispatcher
