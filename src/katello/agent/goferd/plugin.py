@@ -29,7 +29,7 @@ from subprocess import Popen
 
 from katello.constants import REPOSITORY_PATH
 
-from gofer.decorators import initializer, remote, action
+from gofer.decorators import initializer, remote, action, FORK
 from gofer.agent.plugin import Plugin
 from gofer.pmon import PathMonitor
 from gofer.config import Config
@@ -281,7 +281,7 @@ class Content(object):
     Pulp Content Management.
     """
 
-    @remote
+    @remote(model=FORK)
     def install(self, units, options):
         """
         Install the specified content units using the specified options.
@@ -298,7 +298,7 @@ class Content(object):
         report = dispatcher.install(units, options)
         return report.dict()
 
-    @remote
+    @remote(model=FORK)
     def update(self, units, options):
         """
         Update the specified content units using the specified options.
@@ -315,7 +315,7 @@ class Content(object):
         report = dispatcher.update(units, options)
         return report.dict()
 
-    @remote
+    @remote(model=FORK)
     def uninstall(self, units, options):
         """
         Uninstall the specified content units using the specified options.

@@ -1,6 +1,6 @@
 from collections import namedtuple
 from gettext import gettext as _
-from logging import getLogger, Logger
+from logging import getLogger
 from optparse import OptionParser
 
 from yum import YumBase
@@ -353,23 +353,6 @@ class LibYum(YumBase):
         p = self.__parser
         options, args = p.parse_args([])
         self.plugins.setCmdLine(options, args)
-
-    def close(self):
-        """
-        Close.
-        """
-        def strip(logger):
-            for handler in logger.handlers:
-                logger.removeHandler(handler)
-        super(LibYum, self).close()
-        self.closeRpmDB()
-        try:
-            for n, lg in Logger.manager.loggerDict.items():
-                if n.startswith('yum.') and isinstance(lg, Logger):
-                    strip(lg)
-        except Exception:
-            log.exception('logger cleanup failed')
-            raise
 
     def __enter__(self):
         return self
