@@ -32,7 +32,6 @@ from katello.constants import REPOSITORY_PATH
 from gofer.decorators import initializer, remote, action
 from gofer.agent.plugin import Plugin
 from gofer.pmon import PathMonitor
-from gofer.agent.rmi import Context
 from gofer.config import Config
 
 import enabled_repos_upload
@@ -44,8 +43,7 @@ except ImportError:
 
 from rhsm.connection import UEPConnection, RemoteServerException
 
-from pulp.agent.lib.dispatcher import Dispatcher
-from pulp.agent.lib.conduit import Conduit as HandlerConduit
+from katello.agent.pulp import Dispatcher
 
 
 # This plugin
@@ -131,9 +129,11 @@ def certificate_changed(path):
             log.warn(str(e))
             sleep(60)
 
+
 def send_enabled_report(path=REPOSITORY_PATH):
     report = enabled_repos_upload.EnabledReport(path)
     enabled_repos_upload.upload_enabled_repos_report(report)
+
 
 def update_settings():
     """
@@ -146,7 +146,7 @@ def update_settings():
     else:
         #handle old subscription-manager configurations
         ca_cert_dir = rhsm_conf['server']['ca_cert_dir']
- 
+
     # the 'katello-default-ca.pem' is the ca used for generating the CA certs.
     # the 'candlepin-local.pem' is there for compatibility reasons (the old path where the
     # legacy installer was putting this file. If none of them is present, there is still
@@ -252,41 +252,6 @@ class AgentRestart(object):
         log.error('Restart failed, exit=%d', exit_val)
 
 
-class Conduit(HandlerConduit):
-    """
-    Provides integration between the gofer and pulp agent handler frameworks.
-    """
-
-    @property
-    def consumer_id(self):
-        """
-        Get the current consumer ID
-        :return: The unique consumer ID of the currently running agent
-        :rtype:  str
-        """
-        certificate = ConsumerIdentity.read()
-        return certificate.getConsumerId()
-
-    def update_progress(self, report):
-        """
-        This method inentionally left blank mitigate Qpid journal
-        latency related to AMQP 1.0.  The latency significantly
-        degrades performance. If a better solution is found we
-        may re-enable this method to actually report back progress.
-        See http://projects.theforeman.org/issues/12375
-        :param report: A handler progress report.
-        :type report: object
-        """
-
-    def cancelled(self):
-        """
-        Get whether the current operation has been cancelled.
-        :return: True if cancelled, else False.
-        :rtype: bool
-        """
-        context = Context.current()
-        return context.cancelled()
-
 class UEP(UEPConnection):
     """
     Represents the UEP.
@@ -306,7 +271,9 @@ class Consumer(object):
 
     @remote
     def unregister(self):
-        log.info('Consumer has been unregistered. Katello agent will no longer function until this system is reregistered.')
+        log.info('Consumer has been unregistered. '
+                 'Katello agent will no longer function until '
+                 'this system is reregistered.')
 
 
 class Content(object):
@@ -327,9 +294,8 @@ class Content(object):
         :return: A dispatch report.
         :rtype: DispatchReport
         """
-        conduit = Conduit()
         dispatcher = Dispatcher()
-        report = dispatcher.install(conduit, units, options)
+        report = dispatcher.install(units, options)
         return report.dict()
 
     @remote
@@ -345,9 +311,8 @@ class Content(object):
         :return: A dispatch report.
         :rtype: DispatchReport
         """
-        conduit = Conduit()
         dispatcher = Dispatcher()
-        report = dispatcher.update(conduit, units, options)
+        report = dispatcher.update(units, options)
         return report.dict()
 
     @remote
@@ -363,7 +328,6 @@ class Content(object):
         :return: A dispatch report.
         :rtype: DispatchReport
         """
-        conduit = Conduit()
         dispatcher = Dispatcher()
-        report = dispatcher.uninstall(conduit, units, options)
+        report = dispatcher.uninstall( units, options)
         return report.dict()
