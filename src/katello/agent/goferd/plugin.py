@@ -21,15 +21,12 @@ from six import PY2
 import os
 import sys
 
-
 if PY2:
     import httplib as http
 else:
     import http.client as http
 
-
 sys.path.append('/usr/share/rhsm')
-sys.path.append('/usr/lib/yum-plugins')
 
 from time import sleep
 from logging import getLogger
@@ -42,7 +39,11 @@ from gofer.agent.plugin import Plugin
 from gofer.pmon import PathMonitor
 from gofer.config import Config
 
-import enabled_repos_upload
+try:
+  from dnf_plugins import enabled_repos_upload
+except ImportError:
+  sys.path.append('/usr/lib/yum-plugins')
+  import enabled_repos_upload
 
 try:
     from subscription_manager.identity import ConsumerIdentity
