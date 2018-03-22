@@ -70,8 +70,6 @@ class Dispatcher(object):
         Notes:
             Unit is: {type_id:<str>, unit_key:<dict>}
         """
-        import pydevd
-        pydevd.settrace('localhost', port=51234, stdoutToServer=True, stderrToServer=True)
         dispatch_report = DispatchReport()
         collated = self.collated(units)
         for type_id, units in collated.items():
