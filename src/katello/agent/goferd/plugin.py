@@ -15,10 +15,18 @@
 The katello virtual agent.
 Provides content management APIs for pulp within the RHSM environment.
 """
+from six import PY2
+
 
 import os
 import sys
-import httplib
+
+
+if PY2:
+    import httplib as http
+else:
+    import http.client as http
+
 
 sys.path.append('/usr/share/rhsm')
 sys.path.append('/usr/lib/yum-plugins')
@@ -188,7 +196,7 @@ def validate_registration():
         consumer = uep.getConsumer(consumer_id)
         registered = (consumer is not None)
     except RemoteServerException as e:
-        if e.code != httplib.NOT_FOUND:
+        if e.code != http.NOT_FOUND:
             log.warn(str(e))
             raise
     except Exception as e:
