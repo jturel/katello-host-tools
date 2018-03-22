@@ -276,6 +276,9 @@ class AdvisoryFilter(object):
 class LibDnf(Base):
     """
     DNF base.
+
+    Notes:
+        Requires dnf >= 2.7.5
     """
 
     # plugins cannot be reloaded within the process.
@@ -294,7 +297,7 @@ class LibDnf(Base):
         """
         self.read_all_repos()
         if not LibDnf.__plugins_loaded:
-            self._plugins.load(self.conf.pluginpath, skips=[])
+            self.init_plugins()
             LibDnf.__plugins_loaded = True
         self.fill_sack('auto', True)
         self._plugins.run_sack()
