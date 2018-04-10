@@ -150,7 +150,7 @@ def update_settings():
     """
     rhsm_conf = Config(RHSM_CONFIG_PATH)
     certificate = ConsumerIdentity.read()
-    if rhsm_conf['rhsm'].has_key('ca_cert_dir'):
+    if 'ca_cert_dir' in rhsm_conf['rhsm']:
         ca_cert_dir = rhsm_conf['rhsm']['ca_cert_dir']
     else:
         #handle old subscription-manager configurations

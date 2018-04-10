@@ -1,3 +1,5 @@
+import six
+
 from collections import namedtuple
 from gettext import gettext as _
 from logging import getLogger
@@ -196,8 +198,8 @@ class Package(API):
             for pattern in patterns:
                 try:
                     lib.install(pattern=str(pattern))
-                except InstallError, caught:
-                    description = unicode(caught).encode('utf-8')
+                except InstallError as caught:
+                    description = six.text_type(caught).encode('utf-8')
                     caught.value = '%s: %s' % (pattern, description)
                     raise caught
             lib.resolveDeps()
