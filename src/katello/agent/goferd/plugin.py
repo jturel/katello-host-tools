@@ -15,22 +15,16 @@
 The katello virtual agent.
 Provides content management APIs for pulp within the RHSM environment.
 """
-from six import PY2
-
-
 import os
 import sys
-
-if PY2:
-    import httplib as http
-else:
-    import http.client as http
 
 sys.path.append('/usr/share/rhsm')
 
 from time import sleep
 from logging import getLogger
 from subprocess import Popen
+
+from six.moves import http_client as http
 
 from katello.constants import REPOSITORY_PATH
 
@@ -40,12 +34,6 @@ from gofer.pmon import PathMonitor
 from gofer.config import Config
 
 try:
-  from dnf_plugins import enabled_repos_upload
-except ImportError:
-  sys.path.append('/usr/lib/yum-plugins')
-  import enabled_repos_upload
-
-try:
     from subscription_manager.identity import ConsumerIdentity
 except ImportError:
     from subscription_manager.certlib import ConsumerIdentity
@@ -53,6 +41,8 @@ except ImportError:
 from rhsm.connection import UEPConnection, RemoteServerException
 
 from katello.agent.pulp import Dispatcher
+from katello.enabled_report import EnabledReport
+from katello.repos import upload_enabled_repos_report
 
 
 # This plugin
@@ -140,8 +130,8 @@ def certificate_changed(path):
 
 
 def send_enabled_report(path=REPOSITORY_PATH):
-    report = enabled_repos_upload.EnabledReport(path)
-    enabled_repos_upload.upload_enabled_repos_report(report)
+    report = EnabledReport(path)
+    upload_enabled_repos_report(report)
 
 
 def update_settings():
