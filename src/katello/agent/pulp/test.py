@@ -1,3 +1,5 @@
+import logging
+
 from libdnf import *
 
 

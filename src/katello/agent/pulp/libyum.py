@@ -337,7 +337,7 @@ class LibYum(YumBase):
         parser = OptionParser()
         parser.parse_args([])
         self.__parser = parser
-        super(YumBase, self).__init__()
+        super(LibYum, self).__init__()
         self.preconf.optparser = self.__parser
         self.preconf.plugin_types = (TYPE_CORE, TYPE_INTERACTIVE)
         self.conf.assumeyes = True
@@ -351,7 +351,7 @@ class LibYum(YumBase):
             *args:
             **kwargs:
         """
-        super(LibYum, self).doPluginSetup(self, *args, **kwargs)
+        super(LibYum, self).doPluginSetup(*args, **kwargs)
         p = self.__parser
         options, args = p.parse_args([])
         self.plugins.setCmdLine(options, args)
