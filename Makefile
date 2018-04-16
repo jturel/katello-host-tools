@@ -1,4 +1,4 @@
-TEST_TARGETS=zhenech_DASH_katello-client\:el5 zhenech_DASH_katello-client\:el6 zhenech_DASH_katello-client\:el7
+TEST_TARGETS=zhenech_DASH_katello-client\:el6 zhenech_DASH_katello-client\:el7
 USE_SELINUX=$(shell test -d /sys/fs/selinux && echo ":Z")
 
 test-python3:
