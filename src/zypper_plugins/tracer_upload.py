@@ -9,47 +9,35 @@
 # including the implied warranties of MERCHANTABILITY,
 # NON-INFRINGEMENT, or FITNESS FOR A PARTICULAR PURPOSE. You should
 
-import json
-import httplib
 from os import path, environ
-import sys
 import logging
-from rhsm.config import RhsmConfigParser, initConfig
+from katello.tracer import upload_tracer_profile
 from zypp_plugin import Plugin
 
-sys.path.append('/usr/share/rhsm')
-from subscription_manager.identity import ConsumerIdentity
 
 # The path is defined in zypper, see https://github.com/openSUSE/libzypp/blob/master/zypp/target/TargetImpl.cc
 REBOOT_NEEDED_FLAG = "/var/run/reboot-needed"
 
+class ZypperTracerApp:
+    pass
+
 class TracerUploadPlugin(Plugin):
-    def collect_data(self):
-        apps = {}
+    def collect_apps(self, _plugin):
+        apps = []
         if path.isfile(REBOOT_NEEDED_FLAG):
-            apps["kernel"] = { "helper": "You will have to reboot your computer", "type": "static" }
+            app = ZypperTracerApp()
+            app.name = "kernel"
+            app.helper = "You will have to reboot your computer"
+            app.type = "static"
+            apps.append(app)
         return apps
-
-    def upload_tracer_profile(self):
-        data =  json.dumps({ "traces": self.collect_data() })
-        headers = { "Content-Type": "application/json" }
-
-        cfg = initConfig()
-        conn = httplib.HTTPSConnection(
-            RhsmConfigParser.get(cfg,'server', 'hostname'),
-            RhsmConfigParser.get(cfg,'server', 'port'),
-            key_file=ConsumerIdentity.keypath(),
-            cert_file=ConsumerIdentity.certpath()
-        )
-        conn.request('PUT', '/rhsm/consumers/%s/tracer' % (ConsumerIdentity.read().getConsumerId()), data, headers=headers)
-        conn.getresponse()
 
     def PLUGINEND(self, headers, body):
         logging.info("PLUGINEND")
 
         logging.info("Uploading Tracer Profile")
         try:
-            self.upload_tracer_profile()
+            upload_tracer_profile(self.collect_apps)
         except:
             logging.error("Unable to upload Tracer Profile")
 
