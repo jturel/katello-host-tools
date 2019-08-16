@@ -3,6 +3,12 @@ from os import environ
 
 from rhsm import config as rhsmConfig
 
+try:
+    import yum
+    IS_YUM = True
+except ImportError:
+    IS_YUM = False
+
 if sys.version_info[0] == 3:
     from configparser import ConfigParser, NoOptionError
 else:
@@ -25,10 +31,21 @@ def config_enabled(filepath):
 def environment_disabled(variable):
     return variable is not None and variable in environ and environ[variable] != ''
 
+def has_subman_yum_package_plugin():
+    try:
+        import rhsm.yum.whatever.plugin
+        return True
+    except:
+        return False
+
 
 def subman_profile_enabled():
     cfg = rhsmConfig.initConfig()
     try:
-        return cfg.get('rhsm', 'package_profile_on_trans') == '1'
+        config_enabled = cfg.get('rhsm', 'package_profile_on_trans') == '1'
+        if config_enabled and IS_YUM:
+            return has_subman_yum_package_plugin()
+
+        return config_enabled
     except NoOptionError:
         return False
